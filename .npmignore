@@ -1,0 +1,12 @@
+src
+tests
+tsconfig.json
+tsup.config.ts
+biome.json
+.gitignore
+.npmignore
+coverage
+node_modules
+*.log
+.vscode
+.idea

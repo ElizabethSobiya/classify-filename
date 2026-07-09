@@ -1,0 +1,11 @@
+node_modules
+dist
+coverage
+.DS_Store
+*.log
+.vscode
+.idea
+
+# Internal design docs — kept local, not published
+classify-filename-scaffold.md
+classify-filename-roadmap.md

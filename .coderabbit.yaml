@@ -1,0 +1,27 @@
+# CodeRabbit configuration — https://docs.coderabbit.ai/getting-started/configure-coderabbit
+language: en-US
+reviews:
+  profile: chill # 'chill' = fewer, higher-signal comments; 'assertive' = more thorough
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  auto_review:
+    enabled: true
+    drafts: false
+  path_filters:
+    - '!dist/**'
+    - '!**/*.min.js'
+  path_instructions:
+    - path: 'src/**/*.ts'
+      instructions: >-
+        This is a zero-dependency TypeScript library. Flag any new runtime
+        dependency. Keep the public API stable; call out breaking changes to
+        exported types or the classify() signature.
+    - path: 'tests/**/*.ts'
+      instructions: >-
+        Ensure new behavior is covered by tests and assertions match the
+        documented default sort (natural, case-insensitive ascending).
+chat:
+  auto_reply: true
