@@ -7,5 +7,5 @@ coverage
 .idea
 
 # Internal design docs — kept local, not published
-classify-filename-scaffold.md
-classify-filename-roadmap.md
+# Covers scaffold, roadmap, and any macOS " 2" duplicate copies.
+classify-filename-*.md
