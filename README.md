@@ -1,5 +1,11 @@
 # classify-filename
 
+[![npm version](https://img.shields.io/npm/v/classify-filename.svg)](https://www.npmjs.com/package/classify-filename)
+[![npm downloads](https://img.shields.io/npm/dm/classify-filename.svg)](https://www.npmjs.com/package/classify-filename)
+[![minzipped size](https://img.shields.io/bundlephobia/minzip/classify-filename.svg)](https://bundlephobia.com/package/classify-filename)
+[![types included](https://img.shields.io/npm/types/classify-filename.svg)](https://www.npmjs.com/package/classify-filename)
+[![license](https://img.shields.io/npm/l/classify-filename.svg)](./LICENSE)
+
 Sort filenames into named buckets by rules. Zero dependencies, tiny footprint.
 
 ```bash
