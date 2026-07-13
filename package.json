@@ -5,6 +5,14 @@
   "keywords": ["filename", "classify", "sort", "bucket", "categorize", "group", "rules"],
   "author": "Elizabeth Sobiya",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ElizabethSobiya/classify-filename.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ElizabethSobiya/classify-filename/issues"
+  },
+  "homepage": "https://github.com/ElizabethSobiya/classify-filename#readme",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
