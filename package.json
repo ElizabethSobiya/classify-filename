@@ -1,8 +1,16 @@
 {
   "name": "classify-filename",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Sort filenames into named buckets by rules — strings, regex, or predicates. Zero dependencies.",
-  "keywords": ["filename", "classify", "sort", "bucket", "categorize", "group", "rules"],
+  "keywords": [
+    "filename",
+    "classify",
+    "sort",
+    "bucket",
+    "categorize",
+    "group",
+    "rules"
+  ],
   "author": "Elizabeth Sobiya",
   "license": "MIT",
   "repository": {
@@ -24,7 +32,11 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "sideEffects": false,
   "engines": {
     "node": ">=18"
