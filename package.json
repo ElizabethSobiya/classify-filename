@@ -1,6 +1,6 @@
 {
   "name": "classify-filename",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Sort filenames into named buckets by rules — strings, regex, or predicates. Zero dependencies.",
   "keywords": [
     "filename",
