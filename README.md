@@ -98,11 +98,17 @@ console.log(result.matches);
 // { 'noc_agreement.pdf': 'noc', 'random.txt': 'uncategorized', ... }
 ```
 
-## What this is *not* (yet)
+## Why not just `.filter()`?
 
-- No glob support in v1 — use a RegExp for now.
+`.filter()` gives you one bucket. Real file sorting needs multiple named buckets, priority rules, natural sort, and a fallback for unmatched files — that's boilerplate you'd rewrite every time. `classify-filename` wraps it in a single call.
+
+## Not in v1
+
+- No glob support — use a RegExp for now.
 - No file-object input (size, date) — filename-only. Coming in v1.1.
 - No CLI — this is a library. A `bin` wrapper may follow.
+
+See [ROADMAP.md](./ROADMAP.md) for what's planned.
 
 ## License
 

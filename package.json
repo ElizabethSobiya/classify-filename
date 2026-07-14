@@ -9,7 +9,8 @@
     "bucket",
     "categorize",
     "group",
-    "rules"
+    "rules",
+    "router"
   ],
   "author": "Elizabeth Sobiya",
   "license": "MIT",
