@@ -1,14 +1,19 @@
 # Roadmap
 
-## v1.1
+Shipped releases are listed in [CHANGELOG.md](./CHANGELOG.md).
+
+## 0.3
 
 - File-object input (size, date, metadata) alongside filename matching
-- Glob pattern support as a matcher type
 
-## v1.2
+## 0.4
 
 - CLI wrapper (`npx classify-filename ...`)
 - JSON / CSV output formats
+
+## 1.0
+
+- API freeze once file-object input has settled
 
 ## Future
 

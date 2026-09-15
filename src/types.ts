@@ -36,15 +36,25 @@ export interface ClassifyOptions {
   sort?: false | 'asc' | 'desc' | ((a: string, b: string) => number);
 
   /**
-   * If true, the result includes a `matches` map from filename to the section it landed in
-   * (or the fallback name). Useful for debugging rule conflicts.
+   * Include a `matches` map in the result, for debugging rule conflicts.
+   *
+   * - `false` — omit it.
+   * - `true` — map each filename to the single section it landed in (or the
+   *   fallback name). Under `multiMatch` only the first match is reported.
+   * - `'all'` — map each filename to an array of every section it landed in,
+   *   in section order. This is the one to use with `multiMatch: true`.
+   *
    * @default false
    */
-  explain?: boolean;
+  explain?: boolean | 'all';
 }
 
-/** Result of classification. `matches` is present only when `explain: true`. */
-export interface ClassifyResult {
+/**
+ * Result of classification. `matches` is present only when `explain` is set, and
+ * its shape follows which form was used: `explain: true` gives one section name
+ * per file, `explain: 'all'` gives an array of every section the file landed in.
+ */
+export interface ClassifyResult<Match extends string | string[] = string> {
   sections: Record<string, string[]>;
-  matches?: Record<string, string>;
+  matches?: Record<string, Match>;
 }

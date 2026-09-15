@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { classify } from '../src/index.js';
 
 const files = [
@@ -121,9 +121,114 @@ describe('classify', () => {
     });
   });
 
+  it('reports only the first section under explain: true, even with multiMatch', () => {
+    const result = classify(
+      ['noc_agreement.pdf'],
+      [
+        { name: 'noc', match: 'noc' },
+        { name: 'agreements', match: 'agreement' },
+      ],
+      { multiMatch: true, explain: true },
+    );
+    // Preserved from 0.1.x on purpose — `explain: 'all'` is the lossless form.
+    expect(result.matches).toEqual({ 'noc_agreement.pdf': 'noc' });
+  });
+
+  it("explains every matching section under explain: 'all'", () => {
+    const result = classify(
+      ['noc_agreement.pdf', 'x.txt'],
+      [
+        { name: 'noc', match: 'noc' },
+        { name: 'agreements', match: 'agreement' },
+        { name: 'pdfs', match: '.pdf' },
+      ],
+      { multiMatch: true, explain: 'all' },
+    );
+    expect(result.matches).toEqual({
+      'noc_agreement.pdf': ['noc', 'agreements', 'pdfs'],
+      'x.txt': ['uncategorized'],
+    });
+  });
+
+  it("wraps single matches in an array under explain: 'all' without multiMatch", () => {
+    const result = classify(
+      ['noc_agreement.pdf', 'x.txt'],
+      [
+        { name: 'noc', match: 'noc' },
+        { name: 'agreements', match: 'agreement' },
+      ],
+      { explain: 'all' },
+    );
+    expect(result.matches).toEqual({
+      'noc_agreement.pdf': ['noc'],
+      'x.txt': ['uncategorized'],
+    });
+  });
+
+  it("reports the custom fallback name under explain: 'all'", () => {
+    const result = classify(['x.txt'], [{ name: 'noc', match: 'noc' }], {
+      explain: 'all',
+      fallback: 'other',
+    });
+    expect(result.matches).toEqual({ 'x.txt': ['other'] });
+  });
+
+  it('omits dropped files from the explain map when fallback is false', () => {
+    const result = classify(['noc.pdf', 'x.txt'], [{ name: 'noc', match: 'noc' }], {
+      explain: 'all',
+      fallback: false,
+    });
+    expect(result.matches).toEqual({ 'noc.pdf': ['noc'] });
+  });
+
+  it('types matches as string or string[] according to the explain form', () => {
+    const one = classify(['a'], [{ name: 's', match: 'a' }], { explain: true });
+    expectTypeOf(one.matches).toEqualTypeOf<Record<string, string> | undefined>();
+
+    const all = classify(['a'], [{ name: 's', match: 'a' }], { explain: 'all' });
+    expectTypeOf(all.matches).toEqualTypeOf<Record<string, string[]> | undefined>();
+
+    const none = classify(['a'], [{ name: 's', match: 'a' }]);
+    expectTypeOf(none.matches).toEqualTypeOf<Record<string, string> | undefined>();
+  });
+
   it('omits matches map when explain is false', () => {
     const result = classify(['noc.pdf'], [{ name: 'noc', match: 'noc' }]);
     expect(result.matches).toBeUndefined();
+  });
+
+  it('rejects duplicate section names', () => {
+    expect(() =>
+      classify(
+        ['a.txt'],
+        [
+          { name: 'dup', match: 'a' },
+          { name: 'dup', match: 'b' },
+        ],
+      ),
+    ).toThrow(/Duplicate section name "dup"/);
+  });
+
+  it('rejects a section that collides with the fallback bucket', () => {
+    expect(() => classify(['a.txt'], [{ name: 'uncategorized', match: 'a' }])).toThrow(
+      /collides with the fallback bucket/,
+    );
+    expect(() =>
+      classify(['a.txt'], [{ name: 'other', match: 'a' }], { fallback: 'other' }),
+    ).toThrow(/collides with the fallback bucket/);
+  });
+
+  it('allows a section named like the fallback when the fallback is disabled', () => {
+    const result = classify(['a.txt'], [{ name: 'uncategorized', match: 'a' }], {
+      fallback: false,
+    });
+    expect(result.sections.uncategorized).toEqual(['a.txt']);
+  });
+
+  it('rejects an empty or non-string section name', () => {
+    expect(() => classify(['a.txt'], [{ name: '', match: 'a' }])).toThrow(TypeError);
+    // @ts-expect-error — exercising the runtime guard
+    expect(() => classify(['a.txt'], [{ name: 42, match: 'a' }])).toThrow(TypeError);
   });
 
   it('supports array of matchers OR-combined per section', () => {
