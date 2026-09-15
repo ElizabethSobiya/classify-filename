@@ -1,7 +1,7 @@
 {
   "name": "classify-filename",
-  "version": "0.1.2",
-  "description": "Sort filenames into named buckets by rules — strings, regex, or predicates. Zero dependencies.",
+  "version": "0.2.0",
+  "description": "Sort filenames into named buckets by rules — strings, globs, regex, or predicates. Zero dependencies.",
   "keywords": [
     "filename",
     "classify",
@@ -10,7 +10,8 @@
     "categorize",
     "group",
     "rules",
-    "router"
+    "router",
+    "glob"
   ],
   "author": "Elizabeth Sobiya",
   "license": "MIT",
@@ -33,11 +34,7 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
+  "files": ["dist", "README.md", "CHANGELOG.md", "LICENSE"],
   "sideEffects": false,
   "engines": {
     "node": ">=18"
