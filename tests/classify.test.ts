@@ -1,5 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { classify } from '../src/index.js';
+import type { ClassifyOptions } from '../src/index.js';
 
 const files = [
   'NOC_2024.pdf',
@@ -190,6 +191,12 @@ describe('classify', () => {
 
     const none = classify(['a'], [{ name: 's', match: 'a' }]);
     expectTypeOf(none.matches).toEqualTypeOf<Record<string, string> | undefined>();
+
+    // An options variable could hold either form, so the result is the union —
+    // claiming `string` here would typecheck code that throws at runtime.
+    const opts: ClassifyOptions = { explain: 'all' };
+    const either = classify(['a'], [{ name: 's', match: 'a' }], opts);
+    expectTypeOf(either.matches).toEqualTypeOf<Record<string, string | string[]> | undefined>();
   });
 
   it('omits matches map when explain is false', () => {

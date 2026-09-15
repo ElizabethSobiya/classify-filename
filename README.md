@@ -141,12 +141,16 @@ classify(['noc_agreement.pdf'], sections, { multiMatch: true, explain: 'all' });
 // matches: { 'noc_agreement.pdf': ['noc', 'agreements'] }
 ```
 
-The two forms are typed exactly, so there is nothing to narrow at the call site:
+Both forms are typed exactly, so there is nothing to narrow at the call site:
 
 ```ts
 classify(files, sections, { explain: true }).matches;  // Record<string, string>
 classify(files, sections, { explain: 'all' }).matches; // Record<string, string[]>
 ```
+
+Passing an options *variable* typed as plain `ClassifyOptions` gives
+`Record<string, string | string[]>`, since either form could be inside it —
+narrow it, or type the variable with the `explain` form you actually use.
 
 ### Section names must be unique
 

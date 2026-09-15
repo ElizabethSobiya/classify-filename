@@ -64,6 +64,30 @@ describe('glob', () => {
     expect(match('file[0-9.txt', 'file[0-9.txt')).toBe(true);
   });
 
+  it('honors backslash escapes inside a bracket expression', () => {
+    expect(match('[\\]]', ']')).toBe(true);
+    expect(match('[\\]]', '\\')).toBe(false);
+    expect(match('a[b\\]c]d', 'a]d')).toBe(true);
+    expect(match('a[b\\]c]d', 'abd')).toBe(true);
+    expect(match('a[b\\]c]d', 'axd')).toBe(false);
+  });
+
+  it('treats an escaped dash inside a bracket as a literal, not a range', () => {
+    expect(match('[a\\-c]', '-')).toBe(true);
+    expect(match('[a\\-c]', 'b')).toBe(false);
+    expect(match('[a-c]', 'b')).toBe(true);
+  });
+
+  it('treats a leading ] inside a bracket as a literal member', () => {
+    expect(match('[]]', ']')).toBe(true);
+    expect(match('[!]]', 'x')).toBe(true);
+    expect(match('[!]]', ']')).toBe(false);
+  });
+
+  it('treats a bracket ended by a trailing backslash as a literal', () => {
+    expect(match('a[b\\', 'a[b\\')).toBe(true);
+  });
+
   it('is case-insensitive by default and case-sensitive on request', () => {
     expect(match('*.pdf', 'INVOICE.PDF')).toBe(true);
     expect(glob('*.pdf', { caseSensitive: true }).test('INVOICE.PDF')).toBe(false);

@@ -55,13 +55,21 @@ export function classify(
 export function classify(
   filenames: string[],
   sections: Section[],
-  options?: ClassifyOptions,
+  options?: ClassifyOptions & { explain?: boolean },
 ): ClassifyResult<string>;
+// An options *variable* typed as plain `ClassifyOptions` could carry either form,
+// so its result is the union — narrow it at the call site rather than trusting a
+// guess that would be wrong half the time.
+export function classify(
+  filenames: string[],
+  sections: Section[],
+  options: ClassifyOptions,
+): ClassifyResult<string | string[]>;
 export function classify(
   filenames: string[],
   sections: Section[],
   options: ClassifyOptions = {},
-): ClassifyResult<string> | ClassifyResult<string[]> {
+): ClassifyResult<string | string[]> {
   const {
     caseSensitive = false,
     fallback = 'uncategorized',
@@ -78,32 +86,37 @@ export function classify(
     test: buildSectionPredicate(section.match, caseSensitive),
   }));
 
+  // Keyed by caller-supplied strings, so these are Maps rather than plain objects:
+  // a section, fallback, or filename called `__proto__` would otherwise hit
+  // Object.prototype instead of creating an own property. They become plain
+  // objects again via Object.fromEntries, which always defines own properties.
+  //
   // Initialize buckets — include empty ones for predictable output.
-  const buckets: Record<string, string[]> = {};
+  const buckets = new Map<string, string[]>();
   for (const section of sections) {
-    buckets[section.name] = [];
+    buckets.set(section.name, []);
   }
   if (fallback !== false) {
-    buckets[fallback] = [];
+    buckets.set(fallback, []);
   }
 
   // `explain: true` keeps the original one-section-per-file shape; `'all'` records
   // every section a file landed in, which is what multiMatch actually needs.
   const explainAll = explain === 'all';
-  const matches: Record<string, string | string[]> = {};
+  const matches = new Map<string, string | string[]>();
 
   for (const filename of filenames) {
     let matched = false;
 
     for (const { name, test } of compiled) {
       if (test(filename)) {
-        buckets[name]?.push(filename);
+        buckets.get(name)?.push(filename);
         if (explainAll) {
-          const landed = (matches[filename] ?? []) as string[];
+          const landed = (matches.get(filename) ?? []) as string[];
           landed.push(name);
-          matches[filename] = landed;
-        } else if (explain && !(filename in matches)) {
-          matches[filename] = name;
+          matches.set(filename, landed);
+        } else if (explain && !matches.has(filename)) {
+          matches.set(filename, name);
         }
         matched = true;
         if (!multiMatch) break;
@@ -111,23 +124,21 @@ export function classify(
     }
 
     if (!matched && fallback !== false) {
-      buckets[fallback]?.push(filename);
-      if (explain) matches[filename] = explainAll ? [fallback] : fallback;
+      buckets.get(fallback)?.push(filename);
+      if (explain) matches.set(filename, explainAll ? [fallback] : fallback);
     }
   }
 
   // Sort each bucket.
   const comparator = getComparator(sort);
   if (comparator) {
-    for (const name of Object.keys(buckets)) {
-      buckets[name]?.sort(comparator);
+    for (const bucket of buckets.values()) {
+      bucket.sort(comparator);
     }
   }
 
-  const result: { sections: Record<string, string[]>; matches?: typeof matches } = {
-    sections: buckets,
-  };
-  if (explain) result.matches = matches;
+  const result: ClassifyResult<string | string[]> = { sections: Object.fromEntries(buckets) };
+  if (explain) result.matches = Object.fromEntries(matches);
 
   // The overloads above pin the exact `matches` shape per `explain` form; the
   // implementation stays loose and narrows here, once.

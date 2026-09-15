@@ -12,6 +12,9 @@ export interface GlobOptions {
 const escapeLiteral = (char: string): string =>
   /[.*+?^${}()|[\]\\]/.test(char) ? `\\${char}` : char;
 
+/** Escape a character so it is a literal member of a RegExp character class. */
+const escapeClassMember = (char: string): string => (/[\\\]^-]/.test(char) ? `\\${char}` : char);
+
 /**
  * Compile a bracket expression (`[abc]`, `[!a-z]`) starting at `start`.
  * Returns the emitted source and the index just past the closing `]`,
@@ -26,13 +29,29 @@ function compileBracket(pattern: string, start: number): { source: string; next:
     i += 1;
   }
 
-  const bodyStart = i;
+  let body = '';
   // A `]` in the first position is a literal, not the terminator.
-  if (pattern[i] === ']') i += 1;
-  while (i < pattern.length && pattern[i] !== ']') i += 1;
-  if (i >= pattern.length) return null;
+  if (pattern[i] === ']') {
+    body += '\\]';
+    i += 1;
+  }
 
-  const body = pattern.slice(bodyStart, i).replace(/\\/g, '\\\\').replace(/\]/g, '\\]');
+  while (i < pattern.length && pattern[i] !== ']') {
+    const char = pattern[i] as string;
+    if (char === '\\') {
+      const escaped = pattern[i + 1];
+      // A trailing backslash leaves the bracket unterminated.
+      if (escaped === undefined) break;
+      body += escapeClassMember(escaped);
+      i += 2;
+      continue;
+    }
+    // `-` is left bare so ranges like `a-z` keep working; only escaped `\-` is literal.
+    body += char === '[' ? '\\[' : char;
+    i += 1;
+  }
+
+  if (pattern[i] !== ']') return null;
   return { source: `[${negated ? '^' : ''}${body}]`, next: i + 1 };
 }
 

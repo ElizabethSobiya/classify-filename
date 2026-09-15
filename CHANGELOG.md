@@ -6,9 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.2.0 — 2026-09-15
 
-No breaking changes. Existing code keeps working untouched — verified against the
-published 0.1.2 across 972 option/section combinations, with byte-identical
-output. The one behavior change is a bug fix, described under **Fixed**.
+No exported API signatures changed, and no existing option or matcher form
+behaves differently — verified against the published 0.1.2 across 972
+option/section combinations, with byte-identical output.
+
+Two changes are nevertheless backward-incompatible at runtime, and are listed
+under **Changed** below: `classify()` now throws on duplicate section names and
+on a section named the same as `fallback`. Both configurations previously
+produced silently wrong buckets, so callers relying on them were already getting
+corrupt output — but callers who pass either one **will now get an exception
+where 0.1.x returned a result**, and should be checked before upgrading.
 
 ### Added
 
@@ -36,14 +43,26 @@ output. The one behavior change is a bug fix, described under **Fixed**.
   ```
 
   `explain: true` is unchanged and still returns `Record<string, string>`.
-  Overloads give each form an exact return type, so `matches` types as
+  Overloads give each literal form an exact return type, so `matches` types as
   `Record<string, string>` or `Record<string, string[]>` with no narrowing at
-  the call site.
+  the call site. Passing an options *variable* typed as plain `ClassifyOptions`
+  yields `Record<string, string | string[]>`, since either form could be in it.
 
 - Validation for section configurations that previously failed silently — see
   **Changed** below.
 
 ### Fixed
+
+- **Section, fallback, and file names that collide with `Object.prototype`.**
+  Buckets and the `explain` map were plain objects keyed by caller-supplied
+  strings, so those names reached the prototype instead of creating own
+  properties. A section named `__proto__` vanished from the result entirely,
+  taking its files with it; a file named `__proto__` crashed `explain: 'all'`
+  with a `TypeError`; and a file named `constructor` was dropped from the
+  `explain: true` map. Both structures are now built as `Map`s and converted with
+  `Object.fromEntries`, which always defines own properties. The result stays an
+  ordinary object — not a null-prototype one — so `hasOwnProperty` and spreading
+  keep working.
 
 - **A `g` or `y` flagged RegExp matcher skipped files.** Such a regex carries
   `lastIndex` between `.test()` calls, so `/\.pdf/g` matched `a.pdf`, skipped
@@ -53,8 +72,10 @@ output. The one behavior change is a bug fix, described under **Fixed**.
 
 ### Changed
 
-- `classify()` now throws on two configurations that used to corrupt the output
-  quietly. Both are programming errors with no sensible silent behavior:
+- **Backward-incompatible:** `classify()` now throws on two configurations that
+  used to corrupt the output quietly. Both are programming errors with no
+  sensible silent behavior, but code that passes either one changes from
+  returning a (wrong) result to raising:
   - **Duplicate section names.** Under `multiMatch` the same file was pushed
     into the shared bucket twice; otherwise the later section was unreachable.
     Combine the rules into one section with an array matcher instead.

@@ -2,6 +2,54 @@ import { describe, expect, it } from 'vitest';
 import { classify, glob } from '../src/index.js';
 
 describe('edge cases', () => {
+  // Section names, fallback names and filenames are all caller-supplied strings.
+  // Keying plain objects with them would reach Object.prototype instead of
+  // creating own properties: a `__proto__` bucket vanished from the output
+  // entirely, and a `__proto__` filename crashed `explain: 'all'`.
+  describe('prototype-named keys', () => {
+    for (const name of ['__proto__', 'constructor', 'toString', 'hasOwnProperty']) {
+      it(`keeps a section named ${name} as an own property`, () => {
+        const result = classify(['a.txt'], [{ name, match: /./ }]);
+        expect(Object.hasOwn(result.sections, name)).toBe(true);
+        expect(result.sections[name]).toEqual(['a.txt']);
+        expect(Object.keys(result.sections).sort()).toEqual([name, 'uncategorized'].sort());
+      });
+
+      it(`keeps a fallback named ${name} as an own property`, () => {
+        const result = classify(['a.txt'], [{ name: 'none', match: 'zzz' }], { fallback: name });
+        expect(Object.hasOwn(result.sections, name)).toBe(true);
+        expect(result.sections[name]).toEqual(['a.txt']);
+      });
+
+      it(`classifies a file named ${name} under explain: true`, () => {
+        const result = classify([name, 'b.txt'], [{ name: 'all', match: /./ }], { explain: true });
+        expect(result.sections.all).toContain(name);
+        expect(Object.hasOwn(result.matches ?? {}, name)).toBe(true);
+        expect(result.matches?.[name]).toBe('all');
+      });
+
+      it(`classifies a file named ${name} under explain: 'all'`, () => {
+        const result = classify([name], [{ name: 'all', match: /./ }], { explain: 'all' });
+        expect(result.sections.all).toEqual([name]);
+        expect(result.matches?.[name]).toEqual(['all']);
+      });
+    }
+
+    it('returns an ordinary object, not a null-prototype one', () => {
+      const result = classify(['a.txt'], [{ name: 'all', match: /./ }], { explain: true });
+      expect(Object.getPrototypeOf(result.sections)).toBe(Object.prototype);
+      expect(typeof result.sections.hasOwnProperty).toBe('function');
+      expect(Object.getPrototypeOf(result.matches)).toBe(Object.prototype);
+    });
+
+    it('does not pollute Object.prototype', () => {
+      classify(['__proto__'], [{ name: '__proto__', match: /./ }], { explain: 'all' });
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+      expect(Object.getPrototypeOf({})).toBe(Object.prototype);
+      expect(Array.isArray(({} as Record<string, unknown>).__proto__)).toBe(false);
+    });
+  });
+
   it('handles an empty filename list', () => {
     const result = classify([], [{ name: 'noc', match: 'noc' }], { explain: 'all' });
     expect(result.sections).toEqual({ noc: [], uncategorized: [] });
